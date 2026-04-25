@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://dlt5vvk2dppwm"]
+
+[ext_resource type="Script" path="res://personajes/protagonista/Protagonista.gd" id="1_prota1"]
+[ext_resource type="Script" path="res://sistemas/dano/ZonaDano.gd" id="2_dano1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(24, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2"]
+size = Vector2(800, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3"]
+size = Vector2(200, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4"]
+size = Vector2(80, 60)
+
+[node name="EscenaTest" type="Node2D"]
+
+[node name="Protagonista" type="CharacterBody2D" parent="."]
+position = Vector2(400, 300)
+script = ExtResource("1_prota1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Protagonista"]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Visual" type="Polygon2D" parent="Protagonista"]
+polygon = PackedVector2Array(-12, -20, 12, -20, 12, 20, -12, 20)
+color = Color(0.6, 0.45, 0.2, 1)
+
+[node name="Suelo" type="StaticBody2D" parent="."]
+position = Vector2(400, 500)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Suelo"]
+shape = SubResource("RectangleShape2D_2")
+
+[node name="Visual" type="Polygon2D" parent="Suelo"]
+polygon = PackedVector2Array(-400, -16, 400, -16, 400, 16, -400, 16)
+color = Color(0.25, 0.25, 0.25, 1)
+
+[node name="Plataforma" type="StaticBody2D" parent="."]
+position = Vector2(400, 380)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Plataforma"]
+shape = SubResource("RectangleShape2D_3")
+
+[node name="Visual" type="Polygon2D" parent="Plataforma"]
+polygon = PackedVector2Array(-100, -16, 100, -16, 100, 16, -100, 16)
+color = Color(0.35, 0.35, 0.35, 1)
+
+[node name="ZonaDano" type="Area2D" parent="."]
+position = Vector2(600, 468)
+script = ExtResource("2_dano1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaDano"]
+shape = SubResource("RectangleShape2D_4")
+
+[node name="Visual" type="Polygon2D" parent="ZonaDano"]
+polygon = PackedVector2Array(-40, -30, 40, -30, 40, 30, -40, 30)
+color = Color(0.8, 0.15, 0.15, 0.6)
