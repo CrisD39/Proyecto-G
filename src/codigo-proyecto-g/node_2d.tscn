@@ -1,10 +1,11 @@
 [gd_scene format=3 uid="uid://dlt5vvk2dppwm"]
 
-[ext_resource type="Script" path="res://personajes/protagonista/Protagonista.gd" id="1_prota1"]
-[ext_resource type="Script" path="res://sistemas/dano/ZonaDano.gd" id="2_dano1"]
+[ext_resource type="Script" uid="uid://cjalsgdsdks6t" path="res://personajes/protagonista/Protagonista.gd" id="1_prota1"]
+[ext_resource type="Script" uid="uid://c4qpaeatrw4pm" path="res://sistemas/dano/ZonaDano.gd" id="2_dano1"]
+[ext_resource type="Texture2D" uid="uid://dc8pgt8yqjo0m" path="res://personajes/protagonista/Sharing my pixel art.png" id="2_epypp"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(24, 40)
+size = Vector2(64, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2"]
 size = Vector2(800, 32)
@@ -15,46 +16,50 @@ size = Vector2(200, 32)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4"]
 size = Vector2(80, 60)
 
-[node name="EscenaTest" type="Node2D"]
+[node name="EscenaTest" type="Node2D" unique_id=506819201]
 
-[node name="Protagonista" type="CharacterBody2D" parent="."]
+[node name="Protagonista" type="CharacterBody2D" parent="." unique_id=1093800153]
 position = Vector2(400, 300)
 script = ExtResource("1_prota1")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Protagonista"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Protagonista" unique_id=1750501020]
 shape = SubResource("RectangleShape2D_1")
+debug_color = Color(0.66473645, 0.3875741, 0.85623664, 0.41960785)
 
-[node name="Visual" type="Polygon2D" parent="Protagonista"]
-polygon = PackedVector2Array(-12, -20, 12, -20, 12, 20, -12, 20)
+[node name="Visual" type="Polygon2D" parent="Protagonista" unique_id=1444145133]
 color = Color(0.6, 0.45, 0.2, 1)
+polygon = PackedVector2Array(-12, -20, 12, -20, 12, 20, -12, 20)
 
-[node name="Suelo" type="StaticBody2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="Protagonista" unique_id=2146711000]
+texture = ExtResource("2_epypp")
+
+[node name="Suelo" type="StaticBody2D" parent="." unique_id=323153002]
 position = Vector2(400, 500)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Suelo"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Suelo" unique_id=430508233]
 shape = SubResource("RectangleShape2D_2")
 
-[node name="Visual" type="Polygon2D" parent="Suelo"]
-polygon = PackedVector2Array(-400, -16, 400, -16, 400, 16, -400, 16)
+[node name="Visual" type="Polygon2D" parent="Suelo" unique_id=937207666]
 color = Color(0.25, 0.25, 0.25, 1)
+polygon = PackedVector2Array(-400, -16, 400, -16, 400, 16, -400, 16)
 
-[node name="Plataforma" type="StaticBody2D" parent="."]
+[node name="Plataforma" type="StaticBody2D" parent="." unique_id=1086315079]
 position = Vector2(400, 380)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Plataforma"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Plataforma" unique_id=1049160535]
 shape = SubResource("RectangleShape2D_3")
 
-[node name="Visual" type="Polygon2D" parent="Plataforma"]
-polygon = PackedVector2Array(-100, -16, 100, -16, 100, 16, -100, 16)
+[node name="Visual" type="Polygon2D" parent="Plataforma" unique_id=617688879]
 color = Color(0.35, 0.35, 0.35, 1)
+polygon = PackedVector2Array(-100, -16, 100, -16, 100, 16, -100, 16)
 
-[node name="ZonaDano" type="Area2D" parent="."]
+[node name="ZonaDano" type="Area2D" parent="." unique_id=91648604]
 position = Vector2(600, 468)
 script = ExtResource("2_dano1")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaDano"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaDano" unique_id=652653580]
 shape = SubResource("RectangleShape2D_4")
 
-[node name="Visual" type="Polygon2D" parent="ZonaDano"]
-polygon = PackedVector2Array(-40, -30, 40, -30, 40, 30, -40, 30)
+[node name="Visual" type="Polygon2D" parent="ZonaDano" unique_id=1008598802]
 color = Color(0.8, 0.15, 0.15, 0.6)
+polygon = PackedVector2Array(-40, -30, 40, -30, 40, 30, -40, 30)

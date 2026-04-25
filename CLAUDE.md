@@ -63,25 +63,47 @@ OPCIONES: [si tenés opciones para proponer, listalas]
 
 ---
 
+## Flujo de trabajo
+
+El proyecto sigue un flujo en tres etapas. Ningún agente salta una etapa.
+
+```
+Documentación creativa  →  Requerimientos  →  Desarrollo
+(diseñador / escritor)     (analista)          (desarrollador)
+```
+
+| Etapa | Responsable | Output |
+|---|---|---|
+| **Documentación creativa** | Diseñador, escritor | Documentos en `docs/design/`, `docs/mundo/`, `docs/personajes/` |
+| **Requerimientos** | Analista | Documentos en `docs/requerimientos/[sistema].md` |
+| **Desarrollo** | Desarrollador | Código en `src/`, assets en `assets/` |
+
+**Regla clave:** el desarrollador no implementa nada que no tenga un archivo de
+requerimientos aprobado en `docs/requerimientos/`. El analista no genera requerimientos
+de algo que no tenga documento de diseño completo (sin secciones [PENDIENTE] críticas).
+
+---
+
 ## Mapa de documentación
 
-
-| Qué necesitás saber          | Dónde está                         |
-| ------------------------------ | ------------------------------------ |
-| Visión y mecánicas generales | docs/design/GDD.md                   |
-| Mecánica específica          | docs/design/mecanicas/[nombre].md    |
-| Historia y lore del mundo      | docs/mundo/world-bible.md            |
-| Zonas y conexiones             | docs/mundo/zonas/[nombre-zona].md    |
-| Mapa de conexiones del mundo   | docs/mundo/mapa.md                   |
-| Protagonista                   | docs/personajes/protagonista.md      |
-| Criaturas y monstruos          | docs/personajes/bestiary/[nombre].md |
-| Índice de criaturas           | docs/personajes/bestiary/INDEX.md    |
-| NPCs                           | docs/personajes/npcs/[nombre].md     |
-| Estilo visual y arte           | docs/arte/art-bible.md               |
-| Audio y música                | docs/audio/audio-design.md           |
-| Arquitectura del código       | docs/tecnico/arquitectura.md         |
-| Sistemas técnicos             | docs/tecnico/sistemas/[nombre].md    |
-| Bugs reportados                | docs/bugs/[fecha]-[descripcion].md   |
+| Qué necesitás saber          | Dónde está                             |
+| ------------------------------ | -------------------------------------- |
+| Visión y mecánicas generales | docs/design/GDD.md                     |
+| Mecánica específica          | docs/design/mecanicas/[nombre].md      |
+| Requerimientos de un sistema | docs/requerimientos/[nombre-sistema].md |
+| Índice de requerimientos     | docs/requerimientos/INDEX.md           |
+| Historia y lore del mundo      | docs/mundo/world-bible.md              |
+| Zonas y conexiones             | docs/mundo/zonas/[nombre-zona].md      |
+| Mapa de conexiones del mundo   | docs/mundo/mapa.md                     |
+| Protagonista                   | docs/personajes/protagonista.md        |
+| Criaturas y monstruos          | docs/personajes/bestiary/[nombre].md   |
+| Índice de criaturas           | docs/personajes/bestiary/INDEX.md      |
+| NPCs                           | docs/personajes/npcs/[nombre].md       |
+| Estilo visual y arte           | docs/arte/art-bible.md                 |
+| Audio y música                | docs/audio/audio-design.md             |
+| Arquitectura del código       | docs/tecnico/arquitectura.md           |
+| Sistemas técnicos             | docs/tecnico/sistemas/[nombre].md      |
+| Bugs reportados                | docs/bugs/[fecha]-[descripcion].md     |
 
 ---
 
@@ -91,14 +113,19 @@ OPCIONES: [si tenés opciones para proponer, listalas]
 /
 ├── CLAUDE.md                        ← este archivo, leelo siempre primero
 ├── agents/
+│   ├── analista.md                  ← rol: requerimientos
 │   ├── desarrollador.md             ← rol: implementación en Godot
-│   ├── escritor.md                  ← rol: lore, narrativa, personajes
 │   ├── diseñador.md                 ← rol: mecánicas y diseño de juego
+│   ├── escritor.md                  ← rol: lore, narrativa, personajes
 │   └── tester.md                    ← rol: pruebas y reporte de bugs
 ├── docs/
 │   ├── design/
 │   │   ├── GDD.md
+│   │   ├── controles.md
 │   │   └── mecanicas/
+│   ├── requerimientos/              ← output del analista, input del desarrollador
+│   │   ├── INDEX.md
+│   │   └── [nombre-sistema].md
 │   ├── mundo/
 │   │   ├── world-bible.md
 │   │   ├── mapa.md
