@@ -5,8 +5,6 @@ class_name Protagonista
 signal vida_perdida(vidas_restantes: int)
 signal jugador_murio
 
-# ── Constantes ───────────────────────────────────────
-
 # ── Variables exportadas (ajustables en inspector) ───
 @export_group("Movimiento Horizontal")
 @export var velocidad_max: float = 180.0
@@ -16,14 +14,14 @@ signal jugador_murio
 
 @export_group("Salto")
 @export var velocidad_salto: float = 640.0
-@export var velocidad_doble_salto: float = 540.0       # [REVISAR] — ligeramente menor que el primero
+@export var velocidad_doble_salto: float = 540.0       # [REVISAR]
 @export var gravedad: float = 1600.0
-@export var mult_gravedad_hold: float = 0.3            # [REVISAR] — gravedad reducida durante hold en ascenso
+@export var mult_gravedad_hold: float = 0.3            # [REVISAR]
 @export var mult_gravedad_caida: float = 1.4           # [REVISAR]
 @export var mult_gravedad_corte_salto: float = 2.0     # [REVISAR]
-@export var duracion_hold_max: float = 0.25            # [REVISAR] — techo duro del hold efectivo en segundos
-@export var ventana_minima_salto: float = 0.05         # [REVISAR] — protección anti-cut accidental post-despegue
-@export var velocidad_caida_max: float = 600.0         # [REVISAR] — terminal velocity en px/s
+@export var duracion_hold_max: float = 0.25            # [REVISAR]
+@export var ventana_minima_salto: float = 0.05         # [REVISAR]
+@export var velocidad_caida_max: float = 600.0         # [REVISAR]
 @export var saltos_aereos_max: int = 1
 
 @export_group("Dash")
@@ -40,12 +38,12 @@ signal jugador_murio
 var _direccion_mirando: float = 1.0
 var _saltos_aereos_restantes: int = 0
 
-# Salto — control por hold (RF-MOV-005 / 007 / 008)
-var _en_ascenso_por_salto: bool = false            # true durante el ascenso de un salto activo
-var _hold_efectivo_activo: bool = false            # false al agotar duracion_hold_max o soltar el botón
-var _timer_hold_salto: float = 0.0                # acumula el tiempo de hold desde el despegue
-var _timer_ventana_minima: float = 0.0            # mientras > 0, el jump cut no aplica
-var _boton_salto_soltado_en_aire: bool = false    # detecta release+press para el doble salto (RF-MOV-014)
+# Salto — control por hold
+var _en_ascenso_por_salto: bool = false
+var _hold_efectivo_activo: bool = false
+var _timer_hold_salto: float = 0.0
+var _timer_ventana_minima: float = 0.0
+var _boton_salto_soltado_en_aire: bool = false
 
 # Dash
 var _en_dash: bool = false
@@ -60,12 +58,17 @@ var _timer_invencibilidad: float = 0.0
 var _timer_parpadeo: float = 0.0
 
 # ── Nodos referenciados ──────────────────────────────
+@onready var _combate: SistemaCombate = $SistemaCombate
 
 # ── Ciclo de vida ────────────────────────────────────
 func _ready() -> void:
 	_vidas = vidas_maximas
+	_combate.pogo_rebotado.connect(recuperar_recursos_aereos)
 
 func _physics_process(delta: float) -> void:
+	if _combate.en_hitstop:
+		return
+
 	_actualizar_invencibilidad(delta)
 
 	if _cooldown_restante > 0.0:
@@ -81,6 +84,8 @@ func _physics_process(delta: float) -> void:
 		_aplicar_gravedad(delta)
 		_procesar_movimiento_horizontal(delta)
 		_intentar_dash()
+		if Input.is_action_just_pressed("atacar"):
+			_combate.intentar_atacar()
 
 	if is_on_floor():
 		_dash_aereo_disponible = true
@@ -102,6 +107,13 @@ func recibir_daño() -> void:
 	_invencible = true
 	_timer_invencibilidad = duracion_invencibilidad
 	_timer_parpadeo = 0.0
+
+func recuperar_recursos_aereos() -> void:
+	_dash_aereo_disponible = true
+	_saltos_aereos_restantes = saltos_aereos_max
+
+func get_facing() -> float:
+	return _direccion_mirando
 
 func get_vidas() -> int:
 	return _vidas
@@ -131,11 +143,9 @@ func _procesar_salto(delta: float) -> void:
 		_saltos_aereos_restantes = saltos_aereos_max
 		_boton_salto_soltado_en_aire = false
 	else:
-		# Rastrear liberación del botón en el aire para habilitar el doble salto (RF-MOV-014)
 		if not Input.is_action_pressed("saltar"):
 			_boton_salto_soltado_en_aire = true
 
-		# Actualizar timers del hold mientras estamos en ascenso activo
 		if _en_ascenso_por_salto:
 			if _timer_ventana_minima > 0.0:
 				_timer_ventana_minima -= delta
@@ -144,17 +154,14 @@ func _procesar_salto(delta: float) -> void:
 				if Input.is_action_pressed("saltar"):
 					_timer_hold_salto += delta
 					if _timer_hold_salto >= duracion_hold_max:
-						# Techo duro alcanzado: el hold ya no extiende la altura (RF-MOV-008)
 						_hold_efectivo_activo = false
 				else:
-					# Botón soltado: el hold pierde efecto
 					_hold_efectivo_activo = false
 
 	if Input.is_action_just_pressed("saltar"):
 		if is_on_floor():
 			_ejecutar_salto(velocidad_salto)
 		elif _saltos_aereos_restantes > 0 and _boton_salto_soltado_en_aire:
-			# Doble salto: requiere release + press explícito (RF-MOV-014)
 			_ejecutar_salto(velocidad_doble_salto)
 			_saltos_aereos_restantes -= 1
 
@@ -173,21 +180,15 @@ func _aplicar_gravedad(delta: float) -> void:
 	var mult: float = 1.0
 
 	if velocity.y > 0.0:
-		# Fase de caída: gravedad aumentada para dar peso al descenso (RF-MOV-009)
 		mult = mult_gravedad_caida
 	elif velocity.y < 0.0 and _en_ascenso_por_salto:
-		# Fase de ascenso con salto activo
 		if _hold_efectivo_activo and Input.is_action_pressed("saltar"):
-			# Hold válido: gravedad reducida para extender la altura de forma continua (RF-MOV-005)
 			mult = mult_gravedad_hold
 		elif _timer_ventana_minima <= 0.0 and not Input.is_action_pressed("saltar"):
-			# Botón soltado fuera de la ventana mínima: jump cut (RF-MOV-006)
 			mult = mult_gravedad_corte_salto
-		# Dentro de ventana mínima o hold agotado → mult = 1.0 (gravedad normal)
 
 	velocity.y += gravedad * mult * delta
 
-	# Terminal velocity: limita la velocidad máxima de caída (RF-MOV-009)
 	if velocity.y > velocidad_caida_max:
 		velocity.y = velocidad_caida_max
 

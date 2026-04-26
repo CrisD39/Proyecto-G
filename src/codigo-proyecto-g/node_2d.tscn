@@ -3,9 +3,15 @@
 [ext_resource type="Script" uid="uid://cjalsgdsdks6t" path="res://personajes/protagonista/Protagonista.gd" id="1_prota1"]
 [ext_resource type="Script" uid="uid://c4qpaeatrw4pm" path="res://sistemas/dano/ZonaDano.gd" id="2_dano1"]
 [ext_resource type="Texture2D" uid="uid://dc8pgt8yqjo0m" path="res://personajes/protagonista/Sharing my pixel art.png" id="2_epypp"]
+[ext_resource type="Script" uid="uid://bgf0qn11y1v4h" path="res://sistemas/combate/SistemaCombate.gd" id="3_cbt1"]
+[ext_resource type="Script" uid="uid://b3n7nakp2xq4r" path="res://sistemas/combate/HitboxAtaque.gd" id="4_hbx1"]
+[ext_resource type="Script" uid="uid://bdj4x7rjdatv0" path="res://personajes/enemigos/enemigo_prueba/EnemigoPrueba.gd" id="5_enm1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(64, 64)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hbx"]
+size = Vector2(80, 20)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2"]
 size = Vector2(800, 32)
@@ -15,6 +21,9 @@ size = Vector2(200, 32)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4"]
 size = Vector2(80, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_enm"]
+size = Vector2(32, 48)
 
 [node name="EscenaTest" type="Node2D" unique_id=506819201]
 
@@ -32,6 +41,17 @@ polygon = PackedVector2Array(-12, -20, 12, -20, 12, 20, -12, 20)
 
 [node name="Sprite2D" type="Sprite2D" parent="Protagonista" unique_id=2146711000]
 texture = ExtResource("2_epypp")
+
+[node name="SistemaCombate" type="Node" parent="Protagonista" unique_id=987654321]
+script = ExtResource("3_cbt1")
+
+[node name="HitboxAtaque" type="Area2D" parent="Protagonista" unique_id=987654320]
+script = ExtResource("4_hbx1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Protagonista/HitboxAtaque" unique_id=987654319]
+shape = SubResource("RectangleShape2D_hbx")
+disabled = true
+debug_color = Color(0.99215686, 0, 0.23921569, 1)
 
 [node name="Suelo" type="StaticBody2D" parent="." unique_id=323153002]
 position = Vector2(400, 500)
@@ -58,8 +78,21 @@ position = Vector2(600, 468)
 script = ExtResource("2_dano1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ZonaDano" unique_id=652653580]
+position = Vector2(-494, -7)
 shape = SubResource("RectangleShape2D_4")
 
 [node name="Visual" type="Polygon2D" parent="ZonaDano" unique_id=1008598802]
+position = Vector2(-491, -7)
 color = Color(0.8, 0.15, 0.15, 0.6)
 polygon = PackedVector2Array(-40, -30, 40, -30, 40, 30, -40, 30)
+
+[node name="Enemigo" type="CharacterBody2D" parent="." unique_id=1014676096 groups=["enemigo"]]
+position = Vector2(620, 460)
+script = ExtResource("5_enm1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemigo" unique_id=1014676097]
+shape = SubResource("RectangleShape2D_enm")
+
+[node name="Visual" type="Polygon2D" parent="Enemigo" unique_id=1014676098]
+color = Color(0.8, 0.2, 0.2, 1)
+polygon = PackedVector2Array(-16, -24, 16, -24, 16, 24, -16, 24)
