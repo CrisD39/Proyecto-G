@@ -245,3 +245,171 @@ La escena es temporal. No representa ninguna zona del juego.
 - El sistema de salud no tiene un estado "muerto" implementado — emite una señal pero el juego no reacciona todavía.
 - El parpadeo de invencibilidad funciona sobre cualquier visual hijo, no está acoplado al placeholder actual.
 - La escena de prueba (`node_2d.tscn`) no sigue la estructura de zonas del proyecto — es temporal.
+
+---
+---
+
+# Diario de desarrollo — Sesión 2
+> Fecha: 2026-04-26
+
+---
+
+## Contexto
+
+Esta sesión implementó el sistema de combate base del protagonista y un enemigo placeholder para testearlo.
+También se resolvió un bug crítico de posicionamiento de hitbox.
+
+---
+
+## Archivos creados
+
+| Archivo | Descripción |
+|---|---|
+| `sistemas/combate/SistemaCombate.gd` | Sistema de combate: active frames, recovery, buffer, hitstop y pogo |
+| `sistemas/combate/HitboxAtaque.gd` | Hitbox de ataque activable, emite señal al conectar golpe |
+| `personajes/enemigos/enemigo_prueba/EnemigoPrueba.gd` | Enemigo placeholder sin lógica |
+
+## Archivos modificados
+
+| Archivo | Qué cambió |
+|---|---|
+| `personajes/protagonista/Protagonista.gd` | Integración con SistemaCombate: referencia, señal pogo, input de ataque |
+| `node_2d.tscn` | HitboxAtaque reubicado como hijo directo de Protagonista; enemigo placeholder agregado |
+
+---
+
+## Lo que se implementó
+
+### 1. Sistema de combate — SistemaCombate.gd
+
+Componente que vive como hijo de `Protagonista` (nodo `Node` plano, sin transform).
+Maneja todo el ciclo de vida de un ataque.
+
+**Estados internos:**
+```
+IDLE → ACTIVE → HITSTOP → RECOVERY → IDLE
+                         ↘ (sin golpe) RECOVERY directo desde ACTIVE
+```
+
+**Active frames:**  
+Ventana donde la hitbox está activa y puede detectar un golpe.
+Duración configurable desde el inspector (`duracion_active_frames`, default 0.15s).
+
+**Recovery:**  
+Período después del ataque donde el protagonista no puede volver a atacar.
+Duración configurable (`duracion_recovery`, default 0.20s).
+
+**Buffer de ataque:**  
+Si el jugador presiona atacar durante los últimos `ventana_buffer` segundos del recovery,
+el ataque se ejecuta automáticamente al salir del recovery.
+Permite encadenar ataques con timing cómodo sin esperar el frame exacto.
+
+**Hitstop:**  
+Al conectar un golpe, el juego pausa brevemente al objetivo (`set_physics_process(false)`)
+y al protagonista (`en_hitstop = true`, bloqueado en `Protagonista._physics_process`).
+Esto crea el "golpe con peso" característico del metroidvania.
+Duración diferenciada: hitstop normal (0.05s) vs hitstop de pogo (0.08s).
+
+**Dirección del ataque:**  
+- Arriba (↑ + atacar): hitbox sobre el protagonista
+- Pogo (↓ + atacar, en el aire): hitbox debajo del protagonista
+- Lateral (cualquier otro caso): hitbox al lado según `get_facing()`
+
+**Pogo:**  
+Ataque hacia abajo en el aire. Si conecta con un objetivo que no tiene la propiedad
+`rebotable = false`, emite la señal `pogo_rebotado` y aplica un impulso vertical
+hacia arriba al protagonista (`impulso_pogo`, default 480 px/s).
+La propiedad `rebotable` permite que ciertos objetivos (jefes, objetos específicos)
+no generen rebote sin necesidad de cambiar el sistema.
+
+---
+
+### 2. Hitbox de ataque — HitboxAtaque.gd
+
+`Area2D` activable. Cuando está activa y detecta un `CharacterBody2D` (o cualquier physics body),
+emite la señal `golpe_conectado(objetivo)`.
+
+El nodo `propietario` (asignado por `SistemaCombate` en `_ready`) se excluye de la detección
+para que el protagonista no se golpee a sí mismo.
+
+La forma (`RectangleShape2D`) se reconfigura en cada ataque según la dirección.
+
+**Posición en la escena:**  
+`HitboxAtaque` es hijo directo de `Protagonista` (ver bug resuelto abajo).
+`SistemaCombate` lo referencia con `$"../HitboxAtaque"`.
+
+---
+
+### 3. Botón de ataque
+
+| Acción | Botón |
+|---|---|
+| Atacar | `J` (click izquierdo o según configuración) |
+
+Input mapeado como `"atacar"` en `project.godot`.
+El input se procesa en `Protagonista._physics_process` y se delega a `SistemaCombate.intentar_atacar()`.
+Durante el dash o el hitstop, el input de ataque es ignorado.
+
+---
+
+### 4. Enemigo placeholder — EnemigoPrueba.gd
+
+`CharacterBody2D` estático sin lógica de movimiento ni IA.
+Tiene `recibir_daño()` como stub vacío para que `SistemaCombate` lo detecte como objetivo válido.
+Pertenece al grupo `"enemigo"` (definido en la escena).
+Tiene la propiedad `rebotable` ausente → el pogo produce rebote por default.
+
+Posición en la escena de prueba: `(620, 460)`.
+
+---
+
+## Bug resuelto: hitbox no seguía al protagonista
+
+**Síntoma:** La hitbox aparecía en posiciones incorrectas, desplazada respecto al protagonista.
+Inicialmente tenía un offset hardcodeado `(259, 317)` en el CollisionShape2D (residuo del editor).
+Al eliminar ese offset, la hitbox quedaba fija en `(0, 0)` global (esquina superior izquierda del mundo).
+
+**Causa raíz:**  
+En Godot 4, un `CanvasItem` (como `Area2D`) hereda su transform del padre solo si ese padre
+también es un `CanvasItem`. Si el padre es un `Node` plano (sin transform), el hijo usa su
+propio transform local como transform global — efectivamente queda anclado al origen del mundo.
+
+`SistemaCombate` es un `Node` plano (intencional, no tiene representación visual).
+`HitboxAtaque` era hijo de `SistemaCombate`, por lo que no heredaba la posición del `Protagonista`.
+
+**Solución:**  
+`HitboxAtaque` se movió para ser hijo directo de `Protagonista` (que sí es `Node2D`-derivado).
+`SistemaCombate` lo referencia con `$"../HitboxAtaque"` (hermano en el árbol).
+
+---
+
+## Interacciones nuevas entre sistemas
+
+| Combinación | Resultado |
+|---|---|
+| `J` en suelo o aire (sin dirección vertical) | Ataque lateral en la dirección que mira |
+| `↑` + `J` | Ataque hacia arriba |
+| `↓` + `J` (en el aire) | Pogo (ataque hacia abajo) |
+| Pogo conecta en objetivo rebotable | Hitstop + impulso vertical hacia arriba |
+| `J` durante recovery (últimos 0.10s) | Buffer: ataque ejecutado al salir de recovery |
+| Golpe conectado | Hitstop en protagonista y objetivo |
+
+---
+
+## Lo que falta / quedó pendiente
+
+- **Pogo**: la mecánica existe en `SistemaCombate` pero falta testear el impulso y valores.
+- **Animaciones de ataque**: no hay. El protagonista no tiene feedback visual del ataque salvo el hitbox en debug.
+- **Sonido de ataque / impacto**: no implementado.
+- **Daño numérico**: `recibir_daño()` en el protagonista no recibe un valor, siempre resta 1 vida. Diseñar si habrá cantidades de daño variables.
+- **Muerte del enemigo**: `EnemigoPrueba.recibir_daño()` es un stub vacío. No hay lógica de muerte ni feedback visual.
+- **Enemigo real**: `EnemigoPrueba` es un placeholder sin IA. La implementación de enemigos reales espera documentación del bestiary.
+
+---
+
+## Notas técnicas para el analista
+
+- El sistema de combate está desacoplado: `SistemaCombate` solo conoce a `Protagonista` (su padre) y a `HitboxAtaque` (su hermano). No referencia ningún enemigo directamente.
+- La propiedad `rebotable` en los enemigos es opt-out: ausencia = rebota. Si un enemigo específico no debe generar rebote, agrega `var rebotable: bool = false` a su script.
+- El hitstop llama a `objetivo.set_physics_process(false/true)` directamente. Esto funciona para `CharacterBody2D` pero puede requerir ajuste si el objetivo es `AnimationPlayer`-driven o tiene lógica fuera de `_physics_process`.
+- `en_hitstop` es una variable pública de `SistemaCombate`. `Protagonista` la consulta cada frame para bloquear su propio procesamiento durante el hitstop.
